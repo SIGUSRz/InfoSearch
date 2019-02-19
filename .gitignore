@@ -2,6 +2,7 @@
 .idea
 *.pdf
 *.zip
+WEBPAGES_RAW
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
