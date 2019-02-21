@@ -66,7 +66,10 @@ def itertext(root, with_tail=True):
         if root.text:
             yield root.text
         for el in root:
-            if el.tag is etree.Comment or el.tag == "title":
+            if el.tag is etree.Comment or \
+                    el.tag == "script" or \
+                    el.tag == "style" or \
+                    el.tag == "title":
                 continue
             # yield from handlers.get(el.tag, itertext)(el)
             yield _get(handlers, el)
