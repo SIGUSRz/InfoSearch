@@ -64,6 +64,8 @@ def main():
                     print("Complete:", fileId)
 
     # invIndexDict = sort(invIndexDict)
+    # writeTxt(invIndexDict)
+    
     writeJson(invIndexDict)
 
 
