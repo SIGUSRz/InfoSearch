@@ -8,7 +8,6 @@ OPATH = "data/WEBPAGES"
 PATH = "data/INVINDEX"
 
 
-
 # Tokenize the string and count the valid words
 def tokenAndCount(s, wordCounter):
     tokenizer = RegexpTokenizer('[a-zA-Z]+')
@@ -33,7 +32,7 @@ def writeTxt(invIndexDict):
         fp.write('\n'.join([str(word[0]) for word in invIndexDict]))
 
     with open(os.path.join(PATH, "postings.txt"), 'w') as fp:
-        fp.write('\n'.join([str(postings) for postings in invIndexDict]))    
+        fp.write('\n'.join([str(postings) for postings in invIndexDict]))
 
 
 def writeJson(invIndexDict):
@@ -57,7 +56,7 @@ def main():
 
                     with open(os.path.join(OPATH, fileDir), 'r') as fp:
                         wordCounter = Counter()
-                        for line in fp:                     # Read line by line
+                        for line in fp:  # Read line by line
                             tokenAndCount(line, wordCounter)
                         createInvIndex(wordCounter, invIndexDict, fileId)
 
@@ -65,9 +64,8 @@ def main():
 
     # invIndexDict = sort(invIndexDict)
     # writeTxt(invIndexDict)
-    
-    writeJson(invIndexDict)
 
+    writeJson(invIndexDict)
 
 
 if __name__ == '__main__':

@@ -85,7 +85,7 @@ def normalize(text):
         text = list(filter(None, text))
         text = list(filter(lambda x: not re.search(r':\/\/', x), text))
         text = list(filter(lambda x: x != '-', text))
-        text = list(map(lambda x: ''.join(re.findall(r'[\w+\-]', x)), text))
+        text = list(map(lambda x: ''.join(re.findall(r'[A-Za-z]', x)), text))
         text = list(filter(None, text))
         if len(text) == 0:
             return ''
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     with open(os.path.join(DPATH, "bookkeeping.json"), 'r') as f:
         book = json.load(f)
     os.system("rm -rf %s" % OPATH)
+    counter = 0
     for n, d, fs in os.walk(DPATH):
         for directs in d:
             for name, subdirects, files in os.walk(os.path.join(DPATH, directs)):
@@ -123,8 +124,9 @@ if __name__ == "__main__":
                     else:
                         title = ''
                     content = title + '\n' + content
-                    with open(os.path.join(OPATH, book_key + ".txt"), 'w') as fp:
-                        fp.write(content)
-                    print("Done %s" % path)
-
-    print("Done all")
+                    if content != '\n':
+                        counter += 1
+                        with open(os.path.join(OPATH, book_key + ".txt"), 'w') as fp:
+                            fp.write(content)
+                        print("Done %s" % path)
+    print("Done all %d" % counter)
