@@ -1,6 +1,6 @@
 from lxml import etree
 from lxml import html
-import urllib
+from urllib.parse import *
 from nltk.stem import WordNetLemmatizer
 import re
 import os
@@ -12,7 +12,7 @@ lemmatizer = WordNetLemmatizer()
 
 
 def is_valid(url):
-    parsed = urllib.parse.urlparse(url)
+    parsed = urlparse(url)
     # print(parsed)
     # if parsed.path not in {"http", "https", "www"}:
     #     return False
@@ -20,6 +20,7 @@ def is_valid(url):
         return ".ics.uci.edu" in parsed.path \
                and not re.match(".*\.(css|js|bmp|gif|jpe?g|ico"
                                 + "|png|tiff?|mid|mp2|mp3|mp4"
+                                + "|txt"
                                 + "|h|php|bib|py|out"
                                 + "|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
                                 + "|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names|data|dat|"
@@ -77,6 +78,18 @@ def itertext(root, with_tail=True):
             yield root.tail
 
 
+def identify(string):
+    return not re.match(".*\.(css|js|bmp|gif|jpe?g|ico"
+                        + "|png|tiff?|mid|mp2|mp3|mp4"
+                        + "|txt"
+                        + "|h|php|bib|py|out"
+                        + "|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
+                        + "|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names|data|dat|"
+                        + "exe|bz2|tar|msi|bin|7z|psd|dmg|iso|epub|dll|cnf|tgz|sha1"
+                        + "|thmx|mso|arff|rtf|jar|csv"
+                        + "|rm|smil|wmv|swf|wma|zip|rar|gz)", string.lower())
+
+
 def normalize(text):
     if not text:
         return ''
@@ -84,17 +97,21 @@ def normalize(text):
         text = text.split(' ')
         text = list(filter(None, text))
         text = list(filter(lambda x: not re.search(r':\/\/', x), text))
-        text = list(filter(lambda x: x != '-', text))
-        text = list(map(lambda x: ''.join(re.findall(r'[A-Za-z]', x)), text))
-        text = list(filter(None, text))
+        text = list(filter(lambda x: identify(x), text))
+        text = list(map(lambda x: re.sub('[0-9]', '', x), text))
+        text = list(map(lambda x: re.sub('[^a-zA-z]+', ' ', x), text))
+        text = list(filter(lambda x: x != ' ' and x != '', text))
         if len(text) == 0:
             return ''
+        text = ' '.join(text)
+        text = text.split(' ')
+        text = list(filter(lambda x: x != ' ' and x != '', text))
         text = list(map(lambda x: lemmatizer.lemmatize(x.lower()), text))
         text = ' '.join(text)
         return text
     else:
         text = list(map(lambda x: normalize(x), text))
-        text = list(filter(None, text))
+        text = list(filter(lambda x: x != ' ' and x != '', text))
         return ' '.join(text)
 
 
@@ -105,9 +122,11 @@ if __name__ == "__main__":
     counter = 0
     for n, d, fs in os.walk(DPATH):
         for directs in d:
+            # for directs in ["7"]:
             for name, subdirects, files in os.walk(os.path.join(DPATH, directs)):
                 os.makedirs(os.path.join(OPATH, directs))
                 for f in files:
+                    # for f in ["410"]:
                     book_key = os.path.join(directs, f)
                     if not is_valid(book[book_key]):
                         continue
