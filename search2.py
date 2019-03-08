@@ -84,6 +84,7 @@ class SearchEngine(object):
         '''
         import bson
 
+
         tf_idf_query = TFIDFVector(txt=query, N=self.N, invIndexDict=self.invIndexDict, word_id=self.word_id)
         tf_idf_doc = None
         doc_query = {"id":doc_id}
