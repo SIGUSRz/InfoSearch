@@ -4,6 +4,7 @@
 *.zip
 WEBPAGES_RAW/
 WEBPAGES/
+*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
