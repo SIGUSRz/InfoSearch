@@ -122,4 +122,3 @@ class SearchEngine(object):
             res.append(self.book[id])
             count += 1
         return res
-
