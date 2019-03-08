@@ -5,29 +5,6 @@ from collections import Counter
 import math
 import time
 import numpy as np
-from scipy.sparse import *
-from scipy.sparse.linalg import norm
-
-
-class TFIDFVector(object):
-    def __init__(self, txt, N, invIndexDict, word_id):
-        '''
-        :param str: Orginal String
-        :param N: The number of total document, a constant
-        :param invIndexDict: the length of the value for each key is df
-        :param word_id: vocabulary, given a word, return the id of this word
-        '''
-        self.original_str = txt
-        self.vector = {}
-        words = txt.split()
-        word_count = Counter(words)
-        for word in word_count.keys():
-            if word not in word_id:
-                continue
-            id = str(word_id[word])
-            tf = word_count[word]
-            df = len(invIndexDict[word])
-            self.vector[id] = (1 + math.log(tf, 10)) * math.log(N / df, 10)
 
 
 class SearchEngine(object):
@@ -44,35 +21,45 @@ class SearchEngine(object):
             self.invIndexDict = json.load(fp)
         self.N = document_num
         self.word_id = {k: v for v, k in enumerate(self.invIndexDict)}
-        self._tfidf_init()
+        self._tfidf_all_doc()
         print("Initialization Time: ", time.time() - start)
 
-    def _tfidf_init(self):
+    def _tfidf_all_doc(self):
         for info in list(self.book.keys()):
             i = info.split('/')
             dir_id = i[0]
             doc_id = i[1]
             with open(self.opath + "/" + dir_id + "/" + doc_id + ".txt", 'r') as file:
                 doc_txt = file.read()
-            self.doc_tfidf_dict[dir_id + "_" + doc_id] = TFIDFVector(doc_txt, self.N,
-                                                                     self.invIndexDict,
-                                                                     self.word_id)
+            self.doc_tfidf_dict[dir_id + "_" + doc_id] = self._tfidf(doc_txt)
 
-    def get_similarity(self, tf_idf_str1, tf_idf_str2):
+    def _tfidf(self, txt):
+        words = txt.split()
+        word_count = Counter(words)
+        vector = {}
+        for word in word_count.keys():
+            if word not in self.word_id:
+                continue
+            id = str(self.word_id[word])
+            tf = word_count[word]
+            df = len(self.invIndexDict[word])
+            vector[id] = (1 + math.log(tf, 10)) * math.log(self.N / df, 10)
+        return vector
+
+    def get_similarity(self, tf_idf_vec1, tf_idf_vec2):
         '''
-        :param tf_idf_str1:
-        :param tf_idf_str2:
+        :param tf_idf_vec1:
+        :param tf_idf_vec2:
         :return: Cosine similarity of two tf-idf vectors
         '''
         # print(tf_idf_str1)
         numerator = 0
-        for id in tf_idf_str1.vector.keys():
-            if id in tf_idf_str2.vector.keys():
-                # print(tf_idf_str1.vector[id])
-                numerator += tf_idf_str1.vector[id] * tf_idf_str2.vector[id]
-        norm1 = np.array(list(tf_idf_str1.vector.values()))
+        for id in tf_idf_vec1.keys():
+            if id in tf_idf_vec2.keys():
+                numerator += tf_idf_vec1[id] * tf_idf_vec2[id]
+        norm1 = np.array(list(tf_idf_vec1.values()))
         norm1 = np.sqrt(np.sum(norm1 ** 2))
-        norm2 = np.array(list(tf_idf_str2.vector.values()))
+        norm2 = np.array(list(tf_idf_vec2.values()))
         norm2 = np.sqrt(np.sum(norm2 ** 2))
         return numerator / (norm1 * norm2)
 
@@ -84,8 +71,7 @@ class SearchEngine(object):
         :return: grade deault is the similarity between query and doc
         If the vector of doc has already saved, retrieve it, else calculate it and save it
         '''
-        tf_idf_query = TFIDFVector(txt=query, N=self.N, invIndexDict=self.invIndexDict,
-                                   word_id=self.word_id)
+        tf_idf_query = self._tfidf(txt=query)
         grade = self.get_similarity(tf_idf_query, self.doc_tfidf_dict[doc_id])
         return grade
 

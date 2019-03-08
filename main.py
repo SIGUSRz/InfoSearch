@@ -6,7 +6,7 @@ if __name__ == "__main__":
     search_engine = search.SearchEngine(N, path="data/INVINDEX", opath="data/WEBPAGES",
                                         dpath="data/WEBPAGES_RAW")
     while True:
-        query = input("Enter your query:")
+        query = input("Enter your query: ")
         start = time.time()
         res = search_engine.search(query)
         print(res)
