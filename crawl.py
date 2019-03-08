@@ -120,6 +120,7 @@ if __name__ == "__main__":
         book = json.load(f)
     os.system("rm -rf %s" % OPATH)
     counter = 0
+    file_dict = {}
     for n, d, fs in os.walk(DPATH):
         for directs in d:
             # for directs in ["7"]:
@@ -147,5 +148,8 @@ if __name__ == "__main__":
                         counter += 1
                         with open(os.path.join(OPATH, book_key + ".txt"), 'w') as fp:
                             fp.write(content)
+                        file_dict[book_key] = book[book_key]
                         print("Done %s" % path)
+    with open(os.path.join(OPATH, "bookkeeping.json"), 'w') as file:
+        json.dump(file_dict, file)
     print("Done all %d" % counter)
