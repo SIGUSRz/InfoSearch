@@ -2,10 +2,31 @@ from nltk.tokenize import RegexpTokenizer
 from collections import Counter, defaultdict
 import os
 import json
+import math
 
 DPATH = "data/WEBPAGES_RAW"
 OPATH = "data/WEBPAGES"
 PATH = "data/INVINDEX"
+
+
+class TFIDF_Vectorizer(object):
+    def __init__(self, invIndexDict, N):
+        self.invIndexDict = invIndexDict
+        self.word_id = {k: v for v, k in enumerate(self.invIndexDict)}
+        self.N = N
+
+    def tfidf(self, txt):
+        words = txt.split()
+        word_count = Counter(words)
+        vector = {}
+        for word in word_count.keys():
+            if word not in self.word_id:
+                continue
+            id = str(self.word_id[word])
+            tf = word_count[word]
+            df = len(self.invIndexDict[word])
+            vector[id] = (1 + math.log(tf, 10)) * math.log(self.N / df, 10)
+        return vector
 
 
 # Tokenize the string and count the valid words
@@ -40,12 +61,29 @@ def writeJson(invIndexDict):
         json.dump(invIndexDict, fp)
 
 
+def tfidf_all_doc(invIndexDict, N):
+    doc_tfidf_dict = {}
+    with open(os.path.join(OPATH, "bookkeeping.json"), 'r') as f:
+        book = json.load(f)
+    vectorizer = TFIDF_Vectorizer(invIndexDict, N)
+    for info in list(book.keys()):
+        i = info.split('/')
+        dir_id = i[0]
+        doc_id = i[1]
+        with open(OPATH + "/" + dir_id + "/" + doc_id + ".txt", 'r') as file:
+            doc_txt = file.read()
+        doc_tfidf_dict[dir_id + "_" + doc_id] = vectorizer.tfidf(doc_txt)
+    with open(os.path.join(PATH, "tfidf.json"), 'w') as f:
+        json.dump(doc_tfidf_dict, f)
+
+
 def main():
     os.system("rm -rf %s" % PATH)
     os.makedirs(PATH)
 
     invIndexDict = defaultdict(list)
 
+    counter = 0
     for n, d, fs in os.walk(OPATH):
         for directs in d:
             for name, subdirects, files in os.walk(os.path.join(OPATH, directs)):
@@ -59,12 +97,10 @@ def main():
                         for line in fp:  # Read line by line
                             tokenAndCount(line, wordCounter)
                         createInvIndex(wordCounter, invIndexDict, fileId)
+                        counter += 1
 
                     print("Complete:", fileId)
-
-    # invIndexDict = sort(invIndexDict)
-    # writeTxt(invIndexDict)
-
+    tfidf_all_doc(invIndexDict, counter)
     writeJson(invIndexDict)
 
 

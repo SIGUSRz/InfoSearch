@@ -14,24 +14,15 @@ class SearchEngine(object):
         self.dpath = dpath
         self.opath = opath
         self.lemmatizer = WordNetLemmatizer()
-        self.doc_tfidf_dict = {}
         with open(os.path.join(self.opath, "bookkeeping.json"), 'r') as f:
             self.book = json.load(f)
         with open(os.path.join(self.path, "postings.json"), 'r') as fp:
             self.invIndexDict = json.load(fp)
+        with open(os.path.join(self.path, "tfidf.json"), 'r') as fp:
+            self.doc_tfidf_dict = json.load(fp)
         self.N = document_num
         self.word_id = {k: v for v, k in enumerate(self.invIndexDict)}
-        self._tfidf_all_doc()
         print("Initialization Time: ", time.time() - start)
-
-    def _tfidf_all_doc(self):
-        for info in list(self.book.keys()):
-            i = info.split('/')
-            dir_id = i[0]
-            doc_id = i[1]
-            with open(self.opath + "/" + dir_id + "/" + doc_id + ".txt", 'r') as file:
-                doc_txt = file.read()
-            self.doc_tfidf_dict[dir_id + "_" + doc_id] = self._tfidf(doc_txt)
 
     def _tfidf(self, txt):
         words = txt.split()
