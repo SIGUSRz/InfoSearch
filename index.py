@@ -29,6 +29,13 @@ class TFIDF_Vectorizer(object):
         return vector
 
 
+def checkTitle(firstLine, appearTitle):
+    tokenizer = RegexpTokenizer('[a-zA-Z]+')
+    words = tokenizer.tokenize(firstLine)
+    for word in words:
+        appearTitle[word] = True
+
+
 # Tokenize the string and count the valid words
 def tokenAndCount(s, wordCounter):
     tokenizer = RegexpTokenizer('[a-zA-Z]+')
@@ -36,12 +43,11 @@ def tokenAndCount(s, wordCounter):
     wordCounter.update(words)
 
 
-def createInvIndex(wordCounter, invIndexDict, fileId):
+def createInvIndex(wordCounter, appearTitle, invIndexDict, fileId):
     for element in wordCounter:
-        invIndexDict[element].append((fileId, wordCounter[element]))
+        invIndexDict[element].append((fileId, wordCounter[element], appearTitle[element]))
 
 
-# Sort the word count in decreasing order, and resolve ties alphabetically in ascending order
 def sort(invIndexDict):
     sortCount = sorted(invIndexDict.items())
 
@@ -93,13 +99,22 @@ def main():
                     fileId = directs + '_' + fname.rstrip('.txt')
 
                     with open(os.path.join(OPATH, fileDir), 'r') as fp:
+
+                        appearTitle = defaultdict(bool)
+                        firstLine = fp.readline()
+                        checkTitle(firstLine, appearTitle)
+
+                        fp.seek(0)
+
                         wordCounter = Counter()
                         for line in fp:  # Read line by line
                             tokenAndCount(line, wordCounter)
-                        createInvIndex(wordCounter, invIndexDict, fileId)
+
+                        createInvIndex(wordCounter, appearTitle, invIndexDict, fileId)
                         counter += 1
 
                     print("Complete:", fileId)
+
     tfidf_all_doc(invIndexDict, counter)
     writeJson(invIndexDict)
 
