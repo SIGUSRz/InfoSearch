@@ -61,12 +61,11 @@ class SearchEngine(object):
         :param query:
         :param doc_txt:
         :param doc_id:
-        :return: grade default is the similarity between query and doc
+        :return: grade is the similarity between query and doc plus the title weight
         '''
         tf_idf_query = self._tfidf(txt=query)
         grade = self.get_similarity(tf_idf_query, self.doc_tfidf_dict[doc_id])
         grade += 0.01 * title_dict[doc_id]
-        print(title_dict[doc_id])
 
         return grade
 
